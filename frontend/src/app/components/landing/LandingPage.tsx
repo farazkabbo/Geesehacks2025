@@ -17,7 +17,7 @@ import Image from 'next/image'
 // Import team member images
 import MohammedFarazKabbo from '/public/uploads/faraz.jpg'
 import NitinVijayAnand from '/public/uploads/nithin.jpg'
-import AtulRao from '/public/uploads/atul.jpg'     // Add this new import
+import AtulRao from '/public/uploads/atul.jpg'    
 import Jahiem from '/public/uploads/jahiem.jpg'
 const LandingPage = () => {
   const router = useRouter()
@@ -49,7 +49,7 @@ const LandingPage = () => {
   const features = [
     {
       icon: <Mic className="w-6 h-6" />,
-      title: "Smart Meeting Recording",
+      title: "Smart Audio Identifcation",
       description: "Crystal clear audio capture with automatic speaker identification and noise cancellation for professional meetings"
     },
     {
@@ -59,8 +59,8 @@ const LandingPage = () => {
     },
     {
       icon: <Clock className="w-6 h-6" />,
-      title: "Time Analytics",
-      description: "Track meeting efficiency, speaking time distribution, and agenda completion rates"
+      title: "Efficient Searches",
+      description: "Quickly find and replay key moments in meetings with AI-powered search and transcription"
     }
   ]
 
@@ -80,14 +80,14 @@ const LandingPage = () => {
     },
     {
       name: "Atul Rao",
-      linkedin: "https://www.linkedin.com/in/atul5rao//",    // Update with actual LinkedIn URL
-      role: "BEng Software Engineering @ Mcmaster University",        // Update with actual role/university
+      linkedin: "https://www.linkedin.com/in/atul5rao/",   
+      role: "BEng Software Engineering @ Mcmaster University",       
       photo: AtulRao
     },
     {
       name: "Jahiem Allen",
-      linkedin: "https://www.linkedin.com/in/jahiem/",      // Update with actual LinkedIn URL
-      role: "BASc Computer Science @ York University",        // Update with actual role/university
+      linkedin: "https://www.linkedin.com/in/jahiem/",     
+      role: "BASc Computer Science @ York University",        
       photo: Jahiem
     }
   ]
