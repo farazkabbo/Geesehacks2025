@@ -9,7 +9,7 @@ export default function Home() {
   // Initialize our authentication and routing hooks
   const { isLoaded, userId, isSignedIn } = useAuth();
   const router = useRouter();
-  
+
   // Add a state to handle loading states more gracefully
   const [isRedirecting, setIsRedirecting] = useState(false);
 

@@ -3,8 +3,8 @@
 
 import { ClerkProvider } from '@clerk/nextjs'
 
-//import { AppStateProvider } from '@/context/AppStateContext'
-//import Header from '@/components/layout/Header'
+// import { AppStateProvider } from '@/context/AppStateContext'
+// import Header from '@/components/layout/Header'
 
 
 import localFont from "next/font/local"
@@ -47,20 +47,20 @@ export default function RootLayout({
   ]
 
   // Check if current path starts with any of the noHeaderRoutes
-  const shouldShowHeader = !noHeaderRoutes.some(route => 
+  const shouldShowHeader = !noHeaderRoutes.some(route =>
     pathname?.startsWith(route)
   )
 
   return (
     <html lang="en">
-      <ClerkProvider>
+      <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#14171F]`}>
-          
-            {shouldShowHeader && <Header />}
-            <main className={`flex min-h-screen flex-col ${shouldShowHeader ? 'pt-20' : ''}`}>
-              {children}
-            </main>
-        
+
+          {shouldShowHeader && <Header />}
+          <main className={`flex min-h-screen flex-col ${shouldShowHeader ? 'pt-20' : ''}`}>
+            {children}
+          </main>
+
         </body>
       </ClerkProvider>
     </html>
