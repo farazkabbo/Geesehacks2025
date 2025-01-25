@@ -8,21 +8,21 @@ const Logo = () => (
   <div className="flex flex-col items-center">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" className="w-10 h-10">
       {/* First curved line */}
-      <path 
+      <path
         d="M20 5 
            C30 5, 35 15, 35 20
            C35 25, 30 35, 20 35
            C25 30, 28 25, 28 20
-           C28 15, 25 10, 20 5Z" 
+           C28 15, 25 10, 20 5Z"
         fill="#60A5FA"
       />
       {/* Second curved line */}
-      <path 
+      <path
         d="M20 5
            C10 5, 5 15, 5 20
            C5 25, 10 35, 20 35
            C15 30, 12 25, 12 20
-           C12 15, 15 10, 20 5Z" 
+           C12 15, 15 10, 20 5Z"
         fill="#60A5FA"
       />
     </svg>
@@ -45,13 +45,13 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="w-full bg-[#14171F] fixed top-0 left-0 z-50 border-b border-gray-800">
+    <header className="w-full fixed top-0 left-0 z-50 border-b border-black bg-black">
       <div className="w-full px-6 sm:px-8 lg:px-10">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-3">
             <Logo />
             <Link href="/" className="text-3xl font-bold text-blue-300 hover:text-blue-200">
-              StudyBuddy
+              Placeholder
             </Link>
           </div>
 

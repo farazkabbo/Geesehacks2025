@@ -69,27 +69,27 @@ const LandingPage = () => {
     {
       name: "Mohammed Faraz Kabbo",
       linkedin: "https://www.linkedin.com/in/mohammed-faraz-kabbo/",
-      role: "BSc(Hons.) Computer Science @ York University",
+      role: "BSc (Hons.) Computer Science @ York University",
       photo: MohammedFarazKabbo
     },
     {
       name: "Niloy Saha",
       linkedin: "https://www.linkedin.com/in/niloysaha24/",
-      role: "BSc Computer Science & Data Analytics major @ Dickinson College",
+      role: "BEng Computer Engineering @ Toronto Metropolitan University",
       photo: NiloySaha
     },
     {
-        name: "Atul Roi",
-        linkedin: "https://www.linkedin.com/in/atul-roi/",    // Update with actual LinkedIn URL
-        role: "BSc Computer Science @ York University",        // Update with actual role/university
-        photo: AtulRoi
-      },
-      {
-        name: "Jahiem",
-        linkedin: "https://www.linkedin.com/in/jahiem/",      // Update with actual LinkedIn URL
-        role: "BSc Computer Science @ York University",        // Update with actual role/university
-        photo: Jahiem
-      }
+      name: "Atul Roi",
+      linkedin: "https://www.linkedin.com/in/atul5rao//",    // Update with actual LinkedIn URL
+      role: "BEng Software Development @ Mcmaster University",        // Update with actual role/university
+      photo: AtulRoi
+    },
+    {
+      name: "Jahiem",
+      linkedin: "https://www.linkedin.com/in/jahiem/",      // Update with actual LinkedIn URL
+      role: "BASc Computer Science @ York University",        // Update with actual role/university
+      photo: Jahiem
+    }
   ]
 
   // Navigation handler
@@ -130,14 +130,14 @@ const LandingPage = () => {
             <p className={`text-lg text-gray-300 max-w-2xl font-light leading-relaxed
                           transform transition-all duration-1000 delay-500 
                           ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-              Transform your meetings with AI-powered recording, transcription, and analytics. 
+              Transform your meetings with AI-powered recording, transcription, and analytics.
               Get instant meeting minutes, action items, and insights to make every meeting count.
             </p>
 
             {/* CTA Button */}
             <div className={`transform transition-all duration-1000 delay-700 
                            ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-              <button 
+              <button
                 onClick={handleGetStarted}
                 className="px-8 py-4 bg-plum-500 text-white rounded-xl text-lg font-medium 
                          hover:bg-plum-600 transition-all duration-300 
@@ -290,16 +290,16 @@ const LandingPage = () => {
 
           <div className="flex justify-center space-x-12">
             {creators.map((creator, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="text-center p-8 bg-[#14171F] rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105"
               >
                 <div className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-blue-500/30">
-                  <Image 
-                    src={creator.photo} 
-                    alt={creator.name} 
-                    width={128} 
-                    height={128} 
+                  <Image
+                    src={creator.photo}
+                    alt={creator.name}
+                    width={128}
+                    height={128}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -309,9 +309,9 @@ const LandingPage = () => {
                 <p className="text-gray-400 mb-4">
                   {creator.role}
                 </p>
-                <a 
-                  href={creator.linkedin} 
-                  target="_blank" 
+                <a
+                  href={creator.linkedin}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors"
                 >
@@ -335,7 +335,7 @@ const LandingPage = () => {
             <p className="text-gray-400 mb-8">
               Join today and experience the .
             </p>
-            <button 
+            <button
               onClick={handleGetStarted}
               className="px-8 py-4 bg-blue-500 text-white rounded-xl text-lg font-medium 
                        hover:bg-blue-600 transition-all duration-300 
