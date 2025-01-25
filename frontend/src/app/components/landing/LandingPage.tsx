@@ -73,7 +73,7 @@ const LandingPage = () => {
       photo: MohammedFarazKabbo
     },
     {
-      name: "Niloy Saha",
+      name: "Nitin Vijay Anand",
       linkedin: "https://www.linkedin.com/in/niloysaha24/",
       role: "BEng Computer Engineering @ Toronto Metropolitan University",
       photo: NiloySaha
@@ -81,7 +81,7 @@ const LandingPage = () => {
     {
       name: "Atul Roi",
       linkedin: "https://www.linkedin.com/in/atul5rao//",    // Update with actual LinkedIn URL
-      role: "BEng Software Development @ Mcmaster University",        // Update with actual role/university
+      role: "BEng Software Engineering @ Mcmaster University",        // Update with actual role/university
       photo: AtulRoi
     },
     {
