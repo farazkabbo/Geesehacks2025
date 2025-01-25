@@ -16,8 +16,8 @@ import Image from 'next/image'
 
 // Import team member images
 import MohammedFarazKabbo from '/public/uploads/faraz.jpg'
-import NiloySaha from '/public/uploads/nithin.jpg'
-import AtulRoi from '/public/uploads/atul.jpg'     // Add this new import
+import NitinVijayAnand from '/public/uploads/nithin.jpg'
+import AtulRao from '/public/uploads/atul.jpg'     // Add this new import
 import Jahiem from '/public/uploads/jahiem.jpg'
 const LandingPage = () => {
   const router = useRouter()
@@ -74,18 +74,18 @@ const LandingPage = () => {
     },
     {
       name: "Nitin Vijay Anand",
-      linkedin: "https://www.linkedin.com/in/niloysaha24/",
+      linkedin: "https://www.linkedin.com/in/nitinvijay25/",
       role: "BEng Computer Engineering @ Toronto Metropolitan University",
-      photo: NiloySaha
+      photo: NitinVijayAnand
     },
     {
-      name: "Atul Roi",
+      name: "Atul Rao",
       linkedin: "https://www.linkedin.com/in/atul5rao//",    // Update with actual LinkedIn URL
       role: "BEng Software Engineering @ Mcmaster University",        // Update with actual role/university
-      photo: AtulRoi
+      photo: AtulRao
     },
     {
-      name: "Jahiem",
+      name: "Jahiem Allen",
       linkedin: "https://www.linkedin.com/in/jahiem/",      // Update with actual LinkedIn URL
       role: "BASc Computer Science @ York University",        // Update with actual role/university
       photo: Jahiem
