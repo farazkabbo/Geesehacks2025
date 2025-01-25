@@ -89,7 +89,7 @@ const Header = () => {
                   </div>
                   <div className="flex px-6 py-3 items-center text-gray-300 hover:bg-blue-500/10 hover:text-white cursor-pointer">
                     <GraduationCap className="w-6 h-6 mr-3 text-blue-400" />
-                    <span className="text-lg">Exam Preparation</span>
+                    <span className="text-lg">Meeting Preparation</span>
                   </div>
                   <div className="flex px-6 py-3 items-center text-gray-300 hover:bg-blue-500/10 hover:text-white cursor-pointer">
                     <Globe className="w-6 h-6 mr-3 text-blue-400" />
@@ -97,7 +97,7 @@ const Header = () => {
                   </div>
                   <div className="flex px-6 py-3 items-center text-gray-300 hover:bg-blue-500/10 hover:text-white cursor-pointer">
                     <Layers className="w-6 h-6 mr-3 text-blue-400" />
-                    <span className="text-lg">Classroom Organisation</span>
+                    <span className="text-lg">Office Organisation</span>
                   </div>
                 </div>
               )}
