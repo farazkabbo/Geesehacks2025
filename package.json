@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@clerk/nextjs": "^6.10.2",
+    "@next/font": "^14.2.15"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8"
+  }
+}

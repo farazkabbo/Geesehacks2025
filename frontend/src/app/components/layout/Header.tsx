@@ -51,7 +51,7 @@ const Header = () => {
           <div className="flex items-center space-x-3">
             <Logo />
             <Link href="/" className="text-3xl font-bold text-blue-300 hover:text-blue-200">
-              Placeholder
+              MinuteMaster
             </Link>
           </div>
 
