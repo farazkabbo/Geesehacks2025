@@ -2,10 +2,20 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
+});
+
+// Initialize AWS S3 client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
 
 // Configure route behavior
@@ -56,6 +66,18 @@ export async function POST(req) {
     // Write the temp file
     await fs.promises.writeFile(tempFilePath, buffer);
 
+    // Upload to S3
+    const s3Params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `uploads/${outputFileName}`,
+      Body: buffer,
+      ContentType: audioFile.type,
+    };
+
+    const s3Upload = await s3Client.send(new PutObjectCommand(s3Params));
+    const s3Url = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/uploads/${outputFileName}`;
+    console.log('File uploaded to S3:', s3Url);
+
     // Create a File object for OpenAI
     const file = await OpenAI.toFile(
       fs.createReadStream(tempFilePath),
@@ -63,69 +85,20 @@ export async function POST(req) {
     );
 
     // Transcribe using OpenAI's Whisper API
-    console.log('Starting transcription...');
-    const transcription = await openai.audio.transcriptions.create({
-      file: file,
+    const response = await openai.audio.transcriptions.create({
+      file,
       model: 'whisper-1',
-      language: 'en',
-      response_format: 'json'
     });
-    console.log('Transcription completed');
-
-    // Save the file to public uploads
-    await fs.promises.writeFile(outputFilePath, buffer);
 
     // Clean up temp file
-    if (tempFilePath && fs.existsSync(tempFilePath)) {
-      await fs.promises.unlink(tempFilePath);
-    }
+    await fs.promises.unlink(tempFilePath);
 
-    return NextResponse.json({
-      transcription: transcription.text,
-      fileUrl: `/uploads/${outputFileName}`
-    });
+    // Save the transcribed text to a file
+    await fs.promises.writeFile(outputFilePath, response.text);
 
+    return NextResponse.json({ transcription: response.text, filePath: outputFilePath, s3Url });
   } catch (error) {
-    console.error('Transcription error:', error);
-
-    // Clean up temp file if it exists
-    if (tempFilePath && fs.existsSync(tempFilePath)) {
-      try {
-        await fs.promises.unlink(tempFilePath);
-      } catch (cleanupError) {
-        console.error('Error cleaning up temp file:', cleanupError);
-      }
-    }
-
-    // Determine specific error message and status code
-    let errorMessage = 'Failed to transcribe audio';
-    let statusCode = 500;
-
-    if (error.message.includes('API key')) {
-      errorMessage = 'OpenAI API key configuration error';
-      statusCode = 500;
-    } else if (error.message.includes('file too large')) {
-      errorMessage = 'Audio file is too large (max 25MB)';
-      statusCode = 413;
-    } else if (error.message.includes('Invalid file')) {
-      errorMessage = 'Invalid audio file format';
-      statusCode = 400;
-    }
-
-    return NextResponse.json(
-      { 
-        error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      },
-      { status: statusCode }
-    );
+    console.error('Error processing file:', error);
+    return NextResponse.json({ error: 'Failed to process file' }, { status: 500 });
   }
 }
-
-// Configure the API route
-export const config = {
-  api: {
-    bodyParser: false,
-    responseLimit: false,
-  },
-};
