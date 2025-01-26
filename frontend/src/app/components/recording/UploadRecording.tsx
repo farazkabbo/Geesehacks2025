@@ -336,14 +336,13 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
               </div>
 
               {transcription && (
-                <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700">
-                  <p className="text-sm text-plum-200 line-clamp-3">{transcription}</p>
+                <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700 max-h-48 overflow-y-auto">
+                  <p className="text-sm text-plum-200">{transcription}</p>
                 </div>
               )}
-
               {summary && (
-                <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700 mt-2">
-                  <p className="text-sm text-plum-200 line-clamp-3">{summary}</p>
+               <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700 max-h-48 overflow-y-auto">
+                  <p className="text-sm text-plum-200">{summary}</p>
                 </div>
               )}
             </div>
