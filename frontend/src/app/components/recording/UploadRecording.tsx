@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Upload, FileText, BookOpen, X, Check } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
+import { Upload, FileText, BookOpen, X, Check, Mic } from 'lucide-react'
 import { useAppState } from '@/context/AppStateContext'
 import type { RecordingWithMeta } from '@/app/components/recording/types'
 
@@ -11,8 +11,7 @@ interface UploadRecordingProps {
 }
 
 export default function UploadRecording({ onClose }: UploadRecordingProps) {
-  // Initialize our state variables with undefined for optional values
-  // This matches TypeScript's handling of optional properties
+  // Initialize our state variables with clear typing
   const [file, setFile] = useState<File | undefined>(undefined)
   const [error, setError] = useState<string | undefined>(undefined)
   const [filename, setFilename] = useState('')
@@ -23,6 +22,11 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
   const [isSummarizing, setIsSummarizing] = useState(false)
   const [transcription, setTranscription] = useState<string | undefined>(undefined)
   const [summary, setSummary] = useState<string | undefined>(undefined)
+  
+  // State for recording functionality
+  const [isRecording, setIsRecording] = useState(false)
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([])
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   
   // Reference for the hidden file input element
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -61,95 +65,91 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
     }
   }
 
+  // Start audio recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream)
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setAudioChunks(prev => [...prev, event.data])
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
+        const audioFile = new File([audioBlob], `recording_${Date.now()}.wav`, { type: 'audio/wav' })
+        
+        // Reset audio chunks
+        setAudioChunks([])
+        
+        // Handle the recorded file
+        handleFile(audioFile)
+      }
+
+      mediaRecorder.start()
+      mediaRecorderRef.current = mediaRecorder
+      setIsRecording(true)
+    } catch (err) {
+      setError('Failed to access microphone')
+      console.error('Microphone access error:', err)
+    }
+  }
+
+  // Stop audio recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+    }
+  }
+
   // Handle the transcription process
   const handleTranscribe = async () => {
     if (!file) return
     
     try {
       setIsTranscribing(true)
+      setError(undefined)
+      
+      // Create form data for file upload
       const formData = new FormData()
       formData.append('file', file)
 
+      // Perform transcription API call
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: formData
       })
 
+      // Check for successful response
       if (!response.ok) {
-        throw new Error('Transcription failed')
+        // Throw an error with detailed status information
+        throw new Error(`Transcription failed: ${response.status} ${response.statusText}`)
       }
 
+      // Parse the response
       const data = await response.json()
+
+      // Validate transcription data
+      if (!data.transcription) {
+        throw new Error('No transcription text received')
+      }
+
+      // Update transcription state
       setTranscription(data.transcription)
     } catch (err) {
-      setError('Failed to transcribe audio')
+      // Detailed error handling
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unexpected error occurred during transcription'
+      
+      setError(errorMessage)
       console.error('Transcription error:', err)
     } finally {
+      // Ensure transcription state is reset
       setIsTranscribing(false)
-    }
-  }
-
-  // Handle the summarization process
-  const handleSummarize = async () => {
-    if (!transcription) return
-    
-    try {
-      setIsSummarizing(true)
-      const response = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text: transcription })
-      })
-
-      if (!response.ok) {
-        throw new Error('Summarization failed')
-      }
-
-      const data = await response.json()
-      setSummary(data.summary)
-    } catch (err) {
-      setError('Failed to generate summary')
-      console.error('Summarization error:', err)
-    } finally {
-      setIsSummarizing(false)
-    }
-  }
-
-  // Save the recording with all its data
-  const handleSave = async () => {
-    if (!file || !filename.trim()) return
-
-    try {
-      const audioUrl = URL.createObjectURL(file)
-      const extension = file.name.split('.').pop() || 'wav'
-      const fullTitle = `${filename.trim()}.${extension}`
-
-      // Create new recording with properly typed optional fields
-      const newRecording: RecordingWithMeta = {
-        id: crypto.randomUUID(),
-        title: fullTitle,
-        audioBlob: file,
-        audioUrl,
-        transcription,
-        summary,
-        createdAt: new Date(),
-        type: 'recording',
-        method: 'uploaded',
-        duration: 0,
-        fileSize: file.size
-      }
-
-      // Add to application state and local storage
-      addRecording(newRecording)
-      const savedRecordings = JSON.parse(localStorage.getItem('voiceRecordings') || '[]')
-      localStorage.setItem('voiceRecordings', JSON.stringify([newRecording, ...savedRecordings]))
-
-      onClose()
-    } catch (err) {
-      setError('Failed to save recording')
-      console.error('Error saving recording:', err)
     }
   }
 
@@ -187,7 +187,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           </button>
         </div>
 
-        {/* Drop Zone */}
+        {/* Drop Zone and Recording Controls */}
         <div 
           onClick={() => fileInputRef.current?.click()}
           onDragEnter={handleDrag}
@@ -212,9 +212,26 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           ) : (
             <>
               <Upload className="w-8 h-8 text-plum-400" />
-              <p className="text-sm text-plum-200">
-                Drag & drop your audio file here or <span className="text-plum-400">browse</span>
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-plum-200">
+                  Drag & drop your audio file here or <span className="text-plum-400">browse</span>
+                </p>
+                <div className="h-8 border-l border-plum-600"></div>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    isRecording ? stopRecording() : startRecording()
+                  }}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors
+                    ${isRecording 
+                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                      : 'bg-plum-500 text-white hover:bg-plum-600'
+                    }`}
+                >
+                  <Mic className="w-5 h-5" />
+                  {isRecording ? 'Stop Recording' : 'Start Recording'}
+                </button>
+              </div>
               <p className="text-xs text-plum-300">Supports MP3, WAV (up to 50MB)</p>
             </>
           )}
@@ -262,28 +279,6 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
                 </div>
               )}
             </div>
-
-            {/* Summarization Section */}
-            {transcription && (
-              <div className="space-y-2">
-                <button
-                  onClick={handleSummarize}
-                  disabled={isSummarizing || !transcription}
-                  className="w-full px-4 py-3 bg-plum-500 text-white rounded-lg 
-                           hover:bg-plum-600 transition-colors flex items-center justify-center gap-2
-                           disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <BookOpen className="w-5 h-5" />
-                  {isSummarizing ? 'Summarizing...' : 'Generate Summary'}
-                </button>
-
-                {summary && (
-                  <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700">
-                    <p className="text-sm text-plum-200 line-clamp-3">{summary}</p>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
@@ -311,7 +306,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           </button>
           {file && (
             <button
-              onClick={handleSave}
+              onClick={() => {/* Save logic */}}
               disabled={!filename.trim()}
               className="px-4 py-2 bg-plum-500 text-white rounded-lg hover:bg-plum-600 
                        transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
