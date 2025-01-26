@@ -153,6 +153,53 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
     }
   }
 
+  // Handle the summarization process
+  const handleSummarize = async () => {
+    if (!transcription) return
+    
+    try {
+      setIsSummarizing(true)
+      setError(undefined)
+
+      // Perform summarization API call
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: transcription })
+      })
+
+      // Check for successful response
+      if (!response.ok) {
+        // Throw an error with detailed status information
+        throw new Error(`Summarization failed: ${response.status} ${response.statusText}`)
+      }
+
+      // Parse the response
+      const data = await response.json()
+
+      // Validate summary data
+      if (!data.summary) {
+        throw new Error('No summary text received')
+      }
+
+      // Update summary state
+      setSummary(data.summary)
+    } catch (err) {
+      // Detailed error handling
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unexpected error occurred during summarization'
+      
+      setError(errorMessage)
+      console.error('Summarization error:', err)
+    } finally {
+      // Ensure summarization state is reset
+      setIsSummarizing(false)
+    }
+  }
+
   // Handle drag and drop events for file upload
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -262,20 +309,41 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           <div className="space-y-4 mb-6">
             {/* Transcription Section */}
             <div className="space-y-2">
-              <button
-                onClick={handleTranscribe}
-                disabled={isTranscribing || !file}
-                className="w-full px-4 py-3 bg-plum-500 text-white rounded-lg 
-                         hover:bg-plum-600 transition-colors flex items-center justify-center gap-2
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FileText className="w-5 h-5" />
-                {isTranscribing ? 'Transcribing...' : 'Transcribe Audio'}
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleTranscribe}
+                  disabled={isTranscribing || !file}
+                  className="flex-grow px-4 py-3 bg-plum-500 text-white rounded-lg 
+                           hover:bg-plum-600 transition-colors flex items-center justify-center gap-2
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FileText className="w-5 h-5" />
+                  {isTranscribing ? 'Transcribing...' : 'Transcribe Audio'}
+                </button>
+                
+                {transcription && (
+                  <button
+                    onClick={handleSummarize}
+                    disabled={isSummarizing || !transcription}
+                    className="px-4 py-3 bg-plum-600 text-white rounded-lg 
+                             hover:bg-plum-700 transition-colors flex items-center justify-center gap-2
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    {isSummarizing ? 'Summarizing...' : 'Summarize'}
+                  </button>
+                )}
+              </div>
               
               {transcription && (
                 <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700">
                   <p className="text-sm text-plum-200 line-clamp-3">{transcription}</p>
+                </div>
+              )}
+
+              {summary && (
+                <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700 mt-2">
+                  <p className="text-sm text-plum-200 line-clamp-3">{summary}</p>
                 </div>
               )}
             </div>

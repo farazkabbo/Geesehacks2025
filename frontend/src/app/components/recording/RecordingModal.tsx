@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { FileText, BookOpen, X, Mic } from 'lucide-react'
 import { useAppState } from '@/context/AppStateContext'
 import type { RecordingWithMeta } from '@/app/components/recording/types'
 
@@ -26,6 +27,12 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
   const [error, setError] = useState<string | null>(null)
   const [isClosing, setIsClosing] = useState(false)
   
+  // Transcription and summarization states
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [isSummarizing, setIsSummarizing] = useState(false)
+  const [transcription, setTranscription] = useState<string | null>(null)
+  const [summary, setSummary] = useState<string | null>(null)
+  
   // Refs for managing audio
   const streamRef = useRef<MediaStream | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -42,6 +49,8 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
     setIsLightColor(false)
     setFilename('')
     setError(null)
+    setTranscription(null)
+    setSummary(null)
     streamRef.current?.getTracks().forEach(track => track.stop())
     streamRef.current = null
     audioChunks.current = []
@@ -49,6 +58,100 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
       mediaRecorderRef.current?.stop()
     }
     mediaRecorderRef.current = null
+  }
+
+  // Transcription API call
+  const handleTranscribe = async () => {
+    if (audioChunks.current.length === 0) return
+    
+    try {
+      setIsTranscribing(true)
+      setError(null)
+      
+      // Create form data for file upload
+      const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' })
+      const formData = new FormData()
+      formData.append('file', audioBlob, `recording_${Date.now()}.wav`)
+
+      // Perform transcription API call
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData
+      })
+
+      // Check for successful response
+      if (!response.ok) {
+        throw new Error(`Transcription failed: ${response.status} ${response.statusText}`)
+      }
+
+      // Parse the response
+      const data = await response.json()
+
+      // Validate transcription data
+      if (!data.transcription) {
+        throw new Error('No transcription text received')
+      }
+
+      // Update transcription state
+      setTranscription(data.transcription)
+    } catch (err) {
+      // Detailed error handling
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unexpected error occurred during transcription'
+      
+      setError(errorMessage)
+      console.error('Transcription error:', err)
+    } finally {
+      // Ensure transcription state is reset
+      setIsTranscribing(false)
+    }
+  }
+
+  // Summarization API call
+  const handleSummarize = async () => {
+    if (!transcription) return
+    
+    try {
+      setIsSummarizing(true)
+      setError(null)
+
+      // Perform summarization API call
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: transcription })
+      })
+
+      // Check for successful response
+      if (!response.ok) {
+        throw new Error(`Summarization failed: ${response.status} ${response.statusText}`)
+      }
+
+      // Parse the response
+      const data = await response.json()
+
+      // Validate summary data
+      if (!data.summary) {
+        throw new Error('No summary text received')
+      }
+
+      // Update summary state
+      setSummary(data.summary)
+    } catch (err) {
+      // Detailed error handling
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : 'An unexpected error occurred during summarization'
+      
+      setError(errorMessage)
+      console.error('Summarization error:', err)
+    } finally {
+      // Ensure summarization state is reset
+      setIsSummarizing(false)
+    }
   }
 
   // Timer management
@@ -136,7 +239,7 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
       title: filename.trim().endsWith('.wav') ? filename.trim() : `${filename.trim()}.wav`,
       audioBlob: audioBlob,
       audioUrl,
-      transcription: null,
+      transcription,
       createdAt: new Date(),
       type: 'recording',
       method: 'recorded',
@@ -216,19 +319,7 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
             onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <svg
-              className="w-5 h-5 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -295,10 +386,53 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
               </>
             )}
           </div>
-        </div>
 
-        {/* Save Dialog */}
-        {currentDialog === 'save' && (
+          {/* Transcription and Summarization Buttons */}
+          {recordingStatus === 'idle' && audioChunks.current.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="flex gap-4">
+                <button
+                  onClick={handleTranscribe}
+                  disabled={isTranscribing}
+                  className="flex-1 py-3 rounded-lg bg-green-500 hover:bg-green-600 text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-5 h-5" />
+                  {isTranscribing ? 'Transcribing...' : 'Transcribe'}
+                </button>
+               
+                {transcription && (
+                  <button
+                    onClick={handleSummarize}
+                    disabled={isSummarizing}
+                    className="flex-1 py-3 rounded-lg bg-purple-500 hover:bg-purple-600 text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    {isSummarizing ? 'Summarizing...' : 'Summarize'}
+                  </button>
+                )}
+              </div>
+
+              {/* Transcription Display */}
+              {transcription && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Transcription</h4>
+                  <p className="text-sm text-gray-600 max-h-32 overflow-y-auto">{transcription}</p>
+                </div>
+              )}
+
+              {/* Summary Display */}
+              {summary && (
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Summary</h4>
+                  <p className="text-sm text-gray-600 max-h-32 overflow-y-auto">{summary}</p>
+                </div>
+              )}
+            </div>
+            
+          )}
+          </div>
+ {/* Save Dialog */}
+ {currentDialog === 'save' && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[10000]">
             <div className="bg-white rounded-lg p-6 w-96">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Save Recording</h3>
@@ -308,7 +442,7 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
                   value={filename}
                   onChange={(e) => setFilename(e.target.value)}
                   placeholder="Enter filename"
-                  className="flex-grow px-4 py-2 border border-gray-300 rounded-lg-l 
+                  className="flex-grow px-4 py-2 border border-gray-300 rounded-lg 
                          focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   autoFocus
                 />
@@ -362,5 +496,6 @@ export default function RecordingModal({ isOpen, onClose, modalType }: Recording
         )}
       </div>
     </div>
+    
   )
-}
+  }
