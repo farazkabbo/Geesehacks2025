@@ -1,51 +1,33 @@
-// src/app/dashboard/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/app/components/layout/DashboardLayout'
-import RecordingOptions from '@/app/components/recording/RecordingOptions'
-import RecordingList from '@/app/components/recording/RecordingList'
+import RecordingOptions from '@/app/components/recording/RecordingOption'
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner'
-
-// Interface for our recording type
-interface Recording {
-  id: string
-  name: string
-  duration: number
-  createdAt: Date
-  transcription?: string
-  summary?: string
-}
+import { useAppState } from '@/context/AppStateContext'
 
 function DashboardContent() {
   const router = useRouter()
   const { isLoaded, userId } = useAuth()
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [recordings, setRecordings] = useState<Recording[]>([])
+  
+  // We're keeping just the addRecording function from our app state
+  const { addRecording } = useAppState()
 
-  // Authentication check effect
+  // This effect handles our authentication check
   useEffect(() => {
     if (isLoaded && !userId) {
       router.push('/login')
     }
   }, [isLoaded, userId, router])
 
-  // Handler for processing state changes
-  const handleProcessingChange = (processing: boolean) => {
-    setIsProcessing(processing)
-  }
-
-  // Handler for new recordings
-  const handleNewRecording = (recording: Recording) => {
-    setRecordings(prev => [recording, ...prev])
-  }
-
+  // Show loading state while checking authentication
   if (!isLoaded) {
     return <LoadingSpinner />
   }
 
+  // Return null if there's no authenticated user
   if (!userId) {
     return null
   }
@@ -55,17 +37,7 @@ function DashboardContent() {
       {/* Main Recording Section */}
       <section className="bg-[#2D1B2E] rounded-lg p-6 border border-plum-800">
         <h2 className="text-2xl font-semibold text-plum-100 mb-6">Meeting Recorder</h2>
-        <RecordingOptions 
-          onProcessingChange={handleProcessingChange}
-          onNewRecording={handleNewRecording}
-          disabled={isProcessing}
-        />
-      </section>
-
-      {/* Recent Recordings Section */}
-      <section className="bg-[#2D1B2E] rounded-lg p-6 border border-plum-800">
-        <h2 className="text-2xl font-semibold text-plum-100 mb-6">Recent Recordings</h2>
-        <RecordingList recordings={recordings} />
+        <RecordingOptions />
       </section>
     </div>
   )

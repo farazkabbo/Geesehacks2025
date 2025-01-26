@@ -7,12 +7,11 @@ import {
   FileAudio,
   Trash2,
   Menu,
-  LogOut,
-  Settings
+  Upload,
+  FileText,
+  BookOpen
 } from 'lucide-react'
 import Link from 'next/link'
-import { useClerk } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -20,13 +19,6 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setSidebarOpen] = useState(true)
-  const { signOut } = useClerk()
-  const router = useRouter()
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/login')
-  }
 
   return (
     <div className="min-h-screen bg-[#1D1321]">
@@ -53,20 +45,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Link href="/dashboard/trash" 
                   className="flex items-center space-x-3 text-plum-200 hover:bg-plum-800/30 p-3 rounded-lg transition-colors">
               <Trash2 className="w-5 h-5" />
-              <span>Archived</span>
+              <span>Trash</span>
             </Link>
           </nav>
-
-          {/* Bottom Actions */}
-          <div className="p-4 border-t border-plum-800">
-            <button
-              onClick={handleSignOut}
-              className="flex items-center space-x-3 text-plum-200 hover:bg-plum-800/30 p-3 rounded-lg transition-colors w-full"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Sign Out</span>
-            </button>
-          </div>
         </div>
       </aside>
 
@@ -75,19 +56,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         transition-all duration-300 ease-in-out
         ${isSidebarOpen ? 'ml-64' : 'ml-0'}
       `}>
-        {/* Toggle Sidebar Button */}
-        <button
-          onClick={() => setSidebarOpen(!isSidebarOpen)}
-          className="fixed top-4 left-4 z-40 p-2 bg-plum-800 rounded-lg text-plum-100 hover:bg-plum-700 transition-colors"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* Page Content */}
-        <div className="p-4">
+        <div className="p-8">
           {children}
         </div>
       </main>
+
+      {/* Toggle Sidebar Button */}
+      <button
+        onClick={() => setSidebarOpen(!isSidebarOpen)}
+        className="fixed top-4 left-4 z-40 p-2 bg-plum-800 rounded-lg text-plum-100 hover:bg-plum-700 transition-colors"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
     </div>
   )
 }

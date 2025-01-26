@@ -32,7 +32,7 @@ const SignUpPage = () => {
         path="/signup"
         signInUrl="/sign-in"   // Make sure this matches the path in SignInPage
       />
-    </div>
+    </div> 
   )
 }
 
