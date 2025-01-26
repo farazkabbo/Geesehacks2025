@@ -1,101 +1,123 @@
-
+// src/app/components/recording/RecordingOptions.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Mic, Upload, FileText, BookOpen } from 'lucide-react'
 
-export default function RecordingOptions() {
+interface RecordingOptionsProps {
+  onProcessingChange?: (isProcessing: boolean) => void
+  onNewRecording?: (recording: any) => void
+  disabled?: boolean
+}
+
+export default function RecordingOptions({ 
+  onProcessingChange, 
+  onNewRecording,
+  disabled 
+}: RecordingOptionsProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null)
-  const [transcription, setTranscription] = useState('')
-  const [summary, setSummary] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
-  // Handle audio recording
-  const handleStartRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
-      const audioChunks: BlobPart[] = []
+  // Function to handle starting/stopping recording
+  const handleRecordingToggle = async () => {
+    if (isRecording) {
+      // Stop recording
+      mediaRecorderRef.current?.stop()
+      setIsRecording(false)
+    } else {
+      try {
+        // Start new recording
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const mediaRecorder = new MediaRecorder(stream)
+        audioChunksRef.current = []
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data)
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunksRef.current.push(event.data)
+        }
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' })
+          setAudioBlob(audioBlob)
+          handleProcessing(true)
+          handleTranscription(audioBlob)
+        }
+
+        mediaRecorderRef.current = mediaRecorder
+        mediaRecorder.start()
+        setIsRecording(true)
+      } catch (error) {
+        console.error('Error accessing microphone:', error)
+        alert('Could not access microphone. Please check permissions.')
       }
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
-        setAudioBlob(audioBlob)
-      }
-
-      mediaRecorder.start()
-      setIsRecording(true)
-
-      // Stop recording after 2 hours (or adjust as needed)
-      setTimeout(() => mediaRecorder.stop(), 7200000)
-    } catch (error) {
-      console.error('Error starting recording:', error)
     }
   }
 
-  // Handle transcription
-  const handleTranscribe = async () => {
-    if (!audioBlob) return
+  // Function to handle file uploads
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setAudioBlob(file)
+      handleProcessing(true)
+      handleTranscription(file)
+    }
+  }
 
-    setIsProcessing(true)
+  // Function to handle processing state
+  const handleProcessing = (processing: boolean) => {
+    setIsProcessing(processing)
+    onProcessingChange?.(processing)
+  }
+
+  // Function to handle transcription
+  const handleTranscription = async (blob: Blob) => {
     try {
       const formData = new FormData()
-      formData.append('audio', audioBlob)
+      formData.append('audio', blob)
 
-      // Replace with your actual API endpoint
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         body: formData
       })
 
-      const data = await response.json()
-      setTranscription(data.transcription)
-    } catch (error) {
-      console.error('Error transcribing audio:', error)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  // Handle summarization
-  const handleSummarize = async () => {
-    if (!transcription) return
-
-    setIsProcessing(true)
-    try {
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text: transcription })
-      })
+      if (!response.ok) {
+        throw new Error('Transcription failed')
+      }
 
       const data = await response.json()
-      setSummary(data.summary)
+      handleProcessing(false)
+      
+      if (onNewRecording) {
+        onNewRecording({
+          id: Date.now().toString(),
+          name: `Recording ${Date.now()}`,
+          duration: 0, // You would calculate this from the audio
+          createdAt: new Date(),
+          transcription: data.transcription
+        })
+      }
     } catch (error) {
-      console.error('Error summarizing transcription:', error)
-    } finally {
-      setIsProcessing(false)
+      console.error('Transcription error:', error)
+      handleProcessing(false)
+      alert('Error transcribing audio. Please try again.')
     }
   }
 
   return (
-    <div className="mb-8 bg-[#2D1B2E] rounded-lg p-6 border border-plum-800">
+    <div className="space-y-6">
       <div className="flex flex-wrap gap-4">
         {/* Record Button */}
         <button
-          onClick={isRecording ? () => setIsRecording(false) : handleStartRecording}
+          onClick={handleRecordingToggle}
+          disabled={disabled || isProcessing}
           className={`
-            flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors
+            flex items-center space-x-2 px-6 py-3 rounded-lg transition-colors
             ${isRecording 
               ? 'bg-red-500 hover:bg-red-600 text-white' 
               : 'bg-plum-500 hover:bg-plum-600 text-white'}
+            ${(disabled || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
           <Mic className="w-5 h-5" />
@@ -103,55 +125,28 @@ export default function RecordingOptions() {
         </button>
 
         {/* Upload Button */}
-        <label className="flex items-center space-x-2 px-4 py-2 bg-plum-500 hover:bg-plum-600 text-white rounded-lg cursor-pointer transition-colors">
+        <label className={`
+          flex items-center space-x-2 px-6 py-3 bg-plum-500 hover:bg-plum-600 
+          text-white rounded-lg cursor-pointer transition-colors
+          ${(disabled || isProcessing) ? 'opacity-50 cursor-not-allowed' : ''}
+        `}>
           <Upload className="w-5 h-5" />
           <span>Upload Audio</span>
           <input 
             type="file" 
             accept="audio/*"
             className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) {
-                setAudioBlob(file)
-              }
-            }}
+            disabled={disabled || isProcessing}
+            onChange={handleFileUpload}
           />
         </label>
-
-        {/* Transcribe Button */}
-        <button
-          onClick={handleTranscribe}
-          disabled={!audioBlob || isProcessing}
-          className="flex items-center space-x-2 px-4 py-2 bg-plum-500 hover:bg-plum-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <FileText className="w-5 h-5" />
-          <span>Transcribe</span>
-        </button>
-
-        {/* Summarize Button */}
-        <button
-          onClick={handleSummarize}
-          disabled={!transcription || isProcessing}
-          className="flex items-center space-x-2 px-4 py-2 bg-plum-500 hover:bg-plum-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <BookOpen className="w-5 h-5" />
-          <span>Summarize</span>
-        </button>
       </div>
 
-      {/* Display Areas */}
-      {transcription && (
-        <div className="mt-6 p-4 bg-[#1D1321] rounded-lg border border-plum-800">
-          <h3 className="text-lg font-semibold text-plum-100 mb-2">Transcription</h3>
-          <p className="text-plum-200">{transcription}</p>
-        </div>
-      )}
-
-      {summary && (
-        <div className="mt-6 p-4 bg-[#1D1321] rounded-lg border border-plum-800">
-          <h3 className="text-lg font-semibold text-plum-100 mb-2">Summary</h3>
-          <p className="text-plum-200">{summary}</p>
+      {/* Processing Status */}
+      {isProcessing && (
+        <div className="flex items-center justify-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-plum-400 mr-3"></div>
+          <span className="text-plum-200">Processing audio...</span>
         </div>
       )}
     </div>
