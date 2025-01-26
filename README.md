@@ -6,16 +6,13 @@ MinuteMaster is a cutting-edge web application designed to transform the way bus
 
 ## Key Features
 
-### 1. Smart Audio Identification
-- **Icon**: 🎙️  
+### 1. Smart Audio Identification 🎙️  
 - **Description**: Crystal clear audio capture with automatic speaker identification and noise cancellation for professional meetings.
 
-### 2. AI Meeting Minutes
-- **Icon**: 🧠  
+### 2. AI Meeting Minutes 🧠  
 - **Description**: Transform conversations into structured meeting minutes with action items and key decisions highlighted.
 
-### 3. Efficient Searches
-- **Icon**: ⏱️  
+### 3. Efficient Searches ⏱️  
 - **Description**: Quickly find and replay key moments in meetings with AI-powered search and transcription.
 
 ---
