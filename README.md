@@ -55,10 +55,10 @@ MinuteMaster is a cutting-edge web application designed to transform the way bus
 
 ## Technologies Used
 
-- **Frontend**: React, TailwindCSS, Next.js
+- **Frontend**: Next.js, React, TailwindCSS
 - **Backend**: Express
-- **AI Processing**: OpenAI, 
-- **Storage**: S3
+- **AI Processing**: OpenAI
+- **Storage**: Amazon S3
 
 ---
 
@@ -68,5 +68,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ---
 
-Let MinuteMaster revolutionize your meetings today!
+# Let MinuteMaster revolutionize your meetings today!
 
