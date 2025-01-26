@@ -18,9 +18,9 @@ export default function RecordingOptions() {
     <div className="mb-12">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Auto Recording Card */}
-        <div 
-          onClick={handleAutoRecord} 
-          className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 cursor-pointer group"
+        <div
+          onClick={handleAutoRecord}
+          className="bg-plum-800 rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 cursor-pointer group"
         >
           <div className="flex items-start gap-4">
             {/* Microphone Icon */}
@@ -30,17 +30,17 @@ export default function RecordingOptions() {
               </svg>
             </div>
 
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-blue-500 transition-colors">
+            <div className="flex-1 bg-transparent">
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-pink-400 transition-colors">
                 Start Auto Recording
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-white text-sm leading-relaxed">
                 Begin recording instantly with our AI-powered transcription. Perfect for live lectures and study sessions.
               </p>
-              
-              <button 
+
+              <button
                 onClick={handleAutoRecord}
-                className="mt-4 inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm font-medium"
+                className="mt-4 inline-flex items-center gap-2 text-pink-300 hover:text-pink-400 text-sm font-medium"
               >
                 Quick Start
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,9 +52,9 @@ export default function RecordingOptions() {
         </div>
 
         {/* Upload Recording Card */}
-        <div 
+        <div
           onClick={handleUpload}
-          className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 cursor-pointer group"
+          className="bg-plum-800 rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 cursor-pointer group"
         >
           <div className="flex items-start gap-4">
             {/* Upload Icon */}
@@ -65,16 +65,16 @@ export default function RecordingOptions() {
             </div>
 
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-blue-500 transition-colors">
+              <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-pink-400 transition-colors">
                 Upload Recording
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-white text-sm leading-relaxed">
                 Upload existing recordings for AI transcription. Supports various audio formats for your convenience.
               </p>
-              
-              <button 
+
+              <button
                 onClick={handleUpload}
-                className="mt-4 inline-flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm font-medium"
+                className="mt-4 inline-flex items-center gap-2 text-pink-300 hover:text-pink-400 text-sm font-medium"
               >
                 Choose File
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,15 +88,15 @@ export default function RecordingOptions() {
 
       {/* Modal Components - Only render when their respective modalType is active */}
       {modalType === 'record' && (
-        <RecordingModal 
+        <RecordingModal
           isOpen={true}
           onClose={handleCloseModal}
           modalType="record"
         />
       )}
-      
+
       {modalType === 'upload' && (
-        <UploadRecording 
+        <UploadRecording
           onClose={handleCloseModal}
         />
       )}

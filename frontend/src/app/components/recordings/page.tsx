@@ -10,7 +10,7 @@ import type { RecordingWithMeta } from '@/app/components/recording/types'
 export default function RecordingsPage() {
   // Initialize router and get app state methods
   const router = useRouter()
-  const { 
+  const {
     recordings: contextRecordings,
     addRecordingToFavourites,
     removeRecordingFromFavourites,
@@ -31,13 +31,13 @@ export default function RecordingsPage() {
   // Effect to handle sorting and deduplication of recordings
   useEffect(() => {
     const recordingsMap = new Map<string, RecordingWithMeta>()
-    
+
     contextRecordings.forEach((recording: RecordingWithMeta) => {
       recordingsMap.set(recording.id, recording)
     })
 
     const uniqueRecordings = Array.from(recordingsMap.values())
-    const sortedRecordings = uniqueRecordings.sort((a, b) => 
+    const sortedRecordings = uniqueRecordings.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
@@ -60,7 +60,7 @@ export default function RecordingsPage() {
   // Utility function to format dates consistently
   const formatDate = (date: Date) => {
     const utcDate = new Date(date)
-    
+
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'long',
@@ -75,10 +75,10 @@ export default function RecordingsPage() {
   const handleRename = (recording: RecordingWithMeta, e: React.MouseEvent) => {
     e.stopPropagation()
     const extension = recording.title?.split('.').pop() || 'wav'
-    const nameWithoutExt = recording.title 
+    const nameWithoutExt = recording.title
       ? recording.title.replace(`.${extension}`, '')
       : recording.title || ''
-      
+
     setNewTitle(nameWithoutExt)
     setCurrentlyRenamingId(recording.id)
     setIsRenaming(recording.id)
@@ -88,10 +88,10 @@ export default function RecordingsPage() {
   // Save the renamed recording
   const saveRename = (id: string) => {
     if (!newTitle.trim()) return
-    
+
     const recording = recordings.find(r => r.id === id)
     const extension = recording?.title?.split('.').pop() || 'wav'
-    
+
     const fullTitle = `${newTitle.trim()}.${extension}`
     updateRecordingTitle(id, fullTitle)
     setIsRenaming(null)
@@ -119,19 +119,18 @@ export default function RecordingsPage() {
     <DashboardLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6 text-plum-100">My Recordings</h1>
-        
+
         {/* Empty State */}
         {recordings.length === 0 ? (
           <div className="text-center py-12 bg-[#2D1B2E] rounded-lg border border-plum-800">
             <p className="text-plum-200 text-lg">No recordings yet</p>
-            <p className="text-plum-300 mt-2">Start recording to see your recordings here</p>
           </div>
         ) : (
           // Recordings List
           <div className="space-y-4">
             {recordings.map((recording) => (
-              <div 
-                key={recording.id} 
+              <div
+                key={recording.id}
                 className="bg-[#2D1B2E] border border-plum-800 rounded-lg p-4 hover:bg-[#3D2B3E] 
                          transition-all duration-200 relative"
                 onMouseEnter={() => setHoveredId(recording.id)}
@@ -139,7 +138,7 @@ export default function RecordingsPage() {
               >
                 <div className="flex items-center justify-between">
                   {/* Recording Info */}
-                  <div 
+                  <div
                     className="flex-grow cursor-pointer"
                     onClick={() => router.push(`/recordings/${recording.id}`)}
                   >
@@ -154,15 +153,14 @@ export default function RecordingsPage() {
                   {/* Actions Menu */}
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => recording.isFavourite 
+                      onClick={() => recording.isFavourite
                         ? removeRecordingFromFavourites(recording.id)
                         : addRecordingToFavourites(recording)
                       }
-                      className={`p-2 rounded-lg transition-colors ${
-                        recording.isFavourite 
-                          ? 'text-yellow-400 hover:bg-yellow-400/10' 
+                      className={`p-2 rounded-lg transition-colors ${recording.isFavourite
+                          ? 'text-yellow-400 hover:bg-yellow-400/10'
                           : 'text-plum-300 hover:bg-plum-700/30'
-                      }`}
+                        }`}
                     >
                       <Star className="w-5 h-5" fill={recording.isFavourite ? "currentColor" : "none"} />
                     </button>
@@ -181,10 +179,9 @@ export default function RecordingsPage() {
                       <Trash2 className="w-5 h-5" />
                     </button>
 
-                    <ChevronRight 
-                      className={`w-5 h-5 text-plum-300 transition-opacity duration-200 ${
-                        hoveredId === recording.id ? 'opacity-100' : 'opacity-0'
-                      }`} 
+                    <ChevronRight
+                      className={`w-5 h-5 text-plum-300 transition-opacity duration-200 ${hoveredId === recording.id ? 'opacity-100' : 'opacity-0'
+                        }`}
                     />
                   </div>
                 </div>
@@ -241,7 +238,7 @@ export default function RecordingsPage() {
             <div className="bg-[#2D1B2E] rounded-lg p-6 w-[400px] border border-plum-800">
               <h2 className="text-lg font-semibold text-plum-100 mb-2">Delete Recording</h2>
               <p className="text-plum-300 mb-4">
-                Are you sure you want to delete this recording? Items in trash will be automatically 
+                Are you sure you want to delete this recording? Items in trash will be automatically
                 deleted after 30 days.
               </p>
               <div className="flex justify-end gap-2">

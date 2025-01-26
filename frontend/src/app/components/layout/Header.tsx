@@ -50,7 +50,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-3">
             <Logo />
-            <Link href="/" className="text-3xl font-bold text-blue-300 hover:text-blue-200">
+            <Link href="/" className="text-3xl font-bold text-plum-50 hover:text-plum-300">
               MinuteMaster
             </Link>
           </div>
@@ -111,15 +111,16 @@ const Header = () => {
           <div className="flex items-center space-x-6">
             <Link
               href="/sign-in"
-              className="text-lg px-6 py-2 text-blue-300 hover:text-white 
+              className="text-lg px-6 py-2 bg-plum-300 text-white 
+                         rounded-md hover:bg-pink-400 
                          transition-colors duration-300"
             >
               Login
             </Link>
             <Link
               href="/signup"
-              className="text-lg px-6 py-2 bg-blue-500 text-white 
-                         rounded-md hover:bg-blue-400 
+              className="text-lg px-6 py-2 bg-pink-400 text-white 
+                         rounded-md hover:bg-plum-400 
                          transition-colors duration-300"
             >
               Sign Up

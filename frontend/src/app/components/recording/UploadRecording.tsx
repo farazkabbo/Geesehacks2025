@@ -16,18 +16,18 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
   const [error, setError] = useState<string | undefined>(undefined)
   const [filename, setFilename] = useState('')
   const [isDragging, setIsDragging] = useState(false)
-  
+
   // State for tracking processing status and results
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [isSummarizing, setIsSummarizing] = useState(false)
   const [transcription, setTranscription] = useState<string | undefined>(undefined)
   const [summary, setSummary] = useState<string | undefined>(undefined)
-  
+
   // State for recording functionality
   const [isRecording, setIsRecording] = useState(false)
   const [audioChunks, setAudioChunks] = useState<Blob[]>([])
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  
+
   // Reference for the hidden file input element
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { addRecording } = useAppState()
@@ -41,7 +41,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
       setError('Please upload an audio file (MP3 or WAV)')
       return false
     }
-    
+
     // Check file size (50MB limit)
     if (file.size > 50 * 1024 * 1024) {
       setError('File size should be less than 50MB')
@@ -56,7 +56,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
     setError(undefined)
     setTranscription(undefined)
     setSummary(undefined)
-    
+
     if (validateFile(file)) {
       setFile(file)
       // Extract filename without extension for editing
@@ -70,7 +70,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream)
-      
+
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           setAudioChunks(prev => [...prev, event.data])
@@ -80,10 +80,10 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
         const audioFile = new File([audioBlob], `recording_${Date.now()}.wav`, { type: 'audio/wav' })
-        
+
         // Reset audio chunks
         setAudioChunks([])
-        
+
         // Handle the recorded file
         handleFile(audioFile)
       }
@@ -108,11 +108,11 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
   // Handle the transcription process
   const handleTranscribe = async () => {
     if (!file) return
-    
+
     try {
       setIsTranscribing(true)
       setError(undefined)
-      
+
       // Create form data for file upload
       const formData = new FormData()
       formData.append('file', file)
@@ -141,10 +141,10 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
       setTranscription(data.transcription)
     } catch (err) {
       // Detailed error handling
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'An unexpected error occurred during transcription'
-      
+
       setError(errorMessage)
       console.error('Transcription error:', err)
     } finally {
@@ -156,7 +156,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
   // Handle the summarization process
   const handleSummarize = async () => {
     if (!transcription) return
-    
+
     try {
       setIsSummarizing(true)
       setError(undefined)
@@ -188,10 +188,10 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
       setSummary(data.summary)
     } catch (err) {
       // Detailed error handling
-      const errorMessage = err instanceof Error 
-        ? err.message 
+      const errorMessage = err instanceof Error
+        ? err.message
         : 'An unexpected error occurred during summarization'
-      
+
       setError(errorMessage)
       console.error('Summarization error:', err)
     } finally {
@@ -220,13 +220,13 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-      <div className="bg-[#2D1B2E] rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto border border-plum-800">
+      <div className="bg-transparent rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto border border-plum-800">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-plum-100">
             Upload Recording
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 text-plum-300 hover:bg-plum-700/30 rounded-lg transition-colors"
           >
@@ -235,7 +235,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
         </div>
 
         {/* Drop Zone and Recording Controls */}
-        <div 
+        <div
           onClick={() => fileInputRef.current?.click()}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -244,9 +244,9 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           className={`w-full h-48 border-2 border-dashed rounded-lg
             flex flex-col items-center justify-center gap-2 cursor-pointer
             transition-colors mb-6
-            ${isDragging 
-              ? 'border-plum-400 bg-plum-500/10' 
-              : file 
+            ${isDragging
+              ? 'border-plum-400 bg-plum-500/10'
+              : file
                 ? 'border-green-500 bg-green-500/10'
                 : 'border-plum-700 hover:border-plum-500 hover:bg-plum-500/5'
             }`}
@@ -261,23 +261,23 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
               <Upload className="w-8 h-8 text-plum-400" />
               <div className="flex items-center gap-4">
                 <p className="text-sm text-plum-200">
-                  Drag & drop your audio file here or <span className="text-plum-400">browse</span>
+                  Drag and drop your audio file here or <span className="text-plum-400">browse</span>
                 </p>
                 <div className="h-8 border-l border-plum-600"></div>
-                <button 
+                {/* <button
                   onClick={(e) => {
                     e.stopPropagation()
                     isRecording ? stopRecording() : startRecording()
                   }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors
-                    ${isRecording 
-                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                    ${isRecording
+                      ? 'bg-red-500 text-white hover:bg-red-600'
                       : 'bg-plum-500 text-white hover:bg-plum-600'
                     }`}
                 >
                   <Mic className="w-5 h-5" />
                   {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </button>
+                </button> */}
               </div>
               <p className="text-xs text-plum-300">Supports MP3, WAV (up to 50MB)</p>
             </>
@@ -320,7 +320,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
                   <FileText className="w-5 h-5" />
                   {isTranscribing ? 'Transcribing...' : 'Transcribe Audio'}
                 </button>
-                
+
                 {transcription && (
                   <button
                     onClick={handleSummarize}
@@ -334,7 +334,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
                   </button>
                 )}
               </div>
-              
+
               {transcription && (
                 <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700">
                   <p className="text-sm text-plum-200 line-clamp-3">{transcription}</p>
@@ -374,7 +374,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           </button>
           {file && (
             <button
-              onClick={() => {/* Save logic */}}
+              onClick={() => {/* Save logic */ }}
               disabled={!filename.trim()}
               className="px-4 py-2 bg-plum-500 text-white rounded-lg hover:bg-plum-600 
                        transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
