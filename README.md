@@ -24,11 +24,11 @@ MinuteMaster is a cutting-edge web application designed to transform the way bus
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/minutemaster.git
+   git clone https://github.com/your-username/Geesehacks2025.git
    ```
 2. Navigate to the project directory:
    ```bash
-   cd minutemaster
+   cd Geesehacks2025
    ```
 3. Install dependencies:
    ```bash
@@ -57,7 +57,7 @@ MinuteMaster is a cutting-edge web application designed to transform the way bus
 
 - **Frontend**: Next.js, React, TailwindCSS
 - **Backend**: Express
-- **AI Processing**: OpenAI
+- **AI Processing**: OpenAI, Gemini, Clerk
 - **Storage**: Amazon S3
 
 ---
