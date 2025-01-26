@@ -1,30 +1,44 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { Upload, FileText, BookOpen, X, Check } from 'lucide-react'
 import { useAppState } from '@/context/AppStateContext'
 import type { RecordingWithMeta } from '@/app/components/recording/types'
 
+// Define the props interface with clear type definition
 interface UploadRecordingProps {
   onClose: () => void
 }
 
 export default function UploadRecording({ onClose }: UploadRecordingProps) {
-  const [file, setFile] = useState<File | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  // Initialize our state variables with undefined for optional values
+  // This matches TypeScript's handling of optional properties
+  const [file, setFile] = useState<File | undefined>(undefined)
+  const [error, setError] = useState<string | undefined>(undefined)
   const [filename, setFilename] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   
+  // State for tracking processing status and results
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [isSummarizing, setIsSummarizing] = useState(false)
+  const [transcription, setTranscription] = useState<string | undefined>(undefined)
+  const [summary, setSummary] = useState<string | undefined>(undefined)
+  
+  // Reference for the hidden file input element
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { addRecording } = useAppState()
 
+  // Define supported audio formats for validation
   const supportedTypes = ['audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/wave']
 
+  // Validate uploaded files meet our requirements
   const validateFile = (file: File) => {
     if (!supportedTypes.includes(file.type)) {
       setError('Please upload an audio file (MP3 or WAV)')
       return false
     }
     
+    // Check file size (50MB limit)
     if (file.size > 50 * 1024 * 1024) {
       setError('File size should be less than 50MB')
       return false
@@ -33,17 +47,77 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
     return true
   }
 
+  // Handle new file selection from either drop or file input
   const handleFile = (file: File) => {
-    setError(null)
+    setError(undefined)
+    setTranscription(undefined)
+    setSummary(undefined)
     
     if (validateFile(file)) {
       setFile(file)
-      // Remove extension when setting filename for edit
+      // Extract filename without extension for editing
       const nameWithoutExt = file.name.split('.')[0] || ''
       setFilename(nameWithoutExt)
     }
   }
 
+  // Handle the transcription process
+  const handleTranscribe = async () => {
+    if (!file) return
+    
+    try {
+      setIsTranscribing(true)
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Transcription failed')
+      }
+
+      const data = await response.json()
+      setTranscription(data.transcription)
+    } catch (err) {
+      setError('Failed to transcribe audio')
+      console.error('Transcription error:', err)
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
+
+  // Handle the summarization process
+  const handleSummarize = async () => {
+    if (!transcription) return
+    
+    try {
+      setIsSummarizing(true)
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: transcription })
+      })
+
+      if (!response.ok) {
+        throw new Error('Summarization failed')
+      }
+
+      const data = await response.json()
+      setSummary(data.summary)
+    } catch (err) {
+      setError('Failed to generate summary')
+      console.error('Summarization error:', err)
+    } finally {
+      setIsSummarizing(false)
+    }
+  }
+
+  // Save the recording with all its data
   const handleSave = async () => {
     if (!file || !filename.trim()) return
 
@@ -52,27 +126,23 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
       const extension = file.name.split('.').pop() || 'wav'
       const fullTitle = `${filename.trim()}.${extension}`
 
+      // Create new recording with properly typed optional fields
       const newRecording: RecordingWithMeta = {
         id: crypto.randomUUID(),
         title: fullTitle,
         audioBlob: file,
         audioUrl,
-        transcription: null,
+        transcription,
+        summary,
         createdAt: new Date(),
         type: 'recording',
         method: 'uploaded',
-        isFavourite: false,
-        isTranscribing: false,
-        isSummarizing: false,
-        error: undefined,
         duration: 0,
         fileSize: file.size
       }
 
-      // Add to state
+      // Add to application state and local storage
       addRecording(newRecording)
-
-      // Save to localStorage
       const savedRecordings = JSON.parse(localStorage.getItem('voiceRecordings') || '[]')
       localStorage.setItem('voiceRecordings', JSON.stringify([newRecording, ...savedRecordings]))
 
@@ -83,6 +153,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
     }
   }
 
+  // Handle drag and drop events for file upload
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -102,19 +173,17 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[9999]">
-      <div className="bg-white rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#2D1B2E] rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto border border-plum-800">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">
+          <h2 className="text-xl font-semibold text-plum-100">
             Upload Recording
           </h2>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-plum-300 hover:bg-plum-700/30 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -127,39 +196,34 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
           onDrop={handleDrop}
           className={`w-full h-48 border-2 border-dashed rounded-lg
             flex flex-col items-center justify-center gap-2 cursor-pointer
-            transition-colors mb-4
+            transition-colors mb-6
             ${isDragging 
-              ? 'border-blue-500 bg-blue-50' 
+              ? 'border-plum-400 bg-plum-500/10' 
               : file 
-                ? 'border-green-500 bg-green-50'
-                : 'border-gray-300 hover:border-blue-500 hover:bg-gray-50'
+                ? 'border-green-500 bg-green-500/10'
+                : 'border-plum-700 hover:border-plum-500 hover:bg-plum-500/5'
             }`}
         >
           {file ? (
             <>
-              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <p className="text-sm text-gray-600">{file.name}</p>
+              <Check className="w-8 h-8 text-green-500" />
+              <p className="text-sm text-plum-200">{file.name}</p>
             </>
           ) : (
             <>
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p className="text-sm text-gray-600">
-                Drag & drop your audio file here or <span className="text-blue-500">browse</span>
+              <Upload className="w-8 h-8 text-plum-400" />
+              <p className="text-sm text-plum-200">
+                Drag & drop your audio file here or <span className="text-plum-400">browse</span>
               </p>
-              <p className="text-xs text-gray-500">Supports MP3, WAV (up to 50MB)</p>
+              <p className="text-xs text-plum-300">Supports MP3, WAV (up to 50MB)</p>
             </>
           )}
         </div>
 
         {/* Filename Input */}
         {file && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-plum-200 mb-2">
               Recording Name
             </label>
             <div className="flex items-center gap-2">
@@ -167,12 +231,59 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
                 type="text"
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
-                className="flex-grow px-3 py-2 border border-gray-300 rounded-md 
-                         text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-grow px-3 py-2 bg-[#1D1321] border border-plum-700 rounded-lg 
+                         text-plum-100 focus:outline-none focus:ring-2 focus:ring-plum-500"
                 placeholder="Enter recording name"
               />
-              <span className="text-gray-500 text-sm">{`.${file.name.split('.').pop()}`}</span>
+              <span className="text-plum-300 text-sm">{`.${file.name.split('.').pop()}`}</span>
             </div>
+          </div>
+        )}
+
+        {/* Processing Actions */}
+        {file && (
+          <div className="space-y-4 mb-6">
+            {/* Transcription Section */}
+            <div className="space-y-2">
+              <button
+                onClick={handleTranscribe}
+                disabled={isTranscribing || !file}
+                className="w-full px-4 py-3 bg-plum-500 text-white rounded-lg 
+                         hover:bg-plum-600 transition-colors flex items-center justify-center gap-2
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FileText className="w-5 h-5" />
+                {isTranscribing ? 'Transcribing...' : 'Transcribe Audio'}
+              </button>
+              
+              {transcription && (
+                <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700">
+                  <p className="text-sm text-plum-200 line-clamp-3">{transcription}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Summarization Section */}
+            {transcription && (
+              <div className="space-y-2">
+                <button
+                  onClick={handleSummarize}
+                  disabled={isSummarizing || !transcription}
+                  className="w-full px-4 py-3 bg-plum-500 text-white rounded-lg 
+                           hover:bg-plum-600 transition-colors flex items-center justify-center gap-2
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  {isSummarizing ? 'Summarizing...' : 'Generate Summary'}
+                </button>
+
+                {summary && (
+                  <div className="p-3 bg-[#1D1321] rounded-lg border border-plum-700">
+                    <p className="text-sm text-plum-200 line-clamp-3">{summary}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -194,7 +305,7 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
         <div className="flex gap-4 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="px-4 py-2 text-plum-300 hover:bg-plum-700/30 rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -202,9 +313,8 @@ export default function UploadRecording({ onClose }: UploadRecordingProps) {
             <button
               onClick={handleSave}
               disabled={!filename.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg 
-                       hover:bg-blue-600 transition-colors font-medium
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-plum-500 text-white rounded-lg hover:bg-plum-600 
+                       transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save Recording
             </button>
